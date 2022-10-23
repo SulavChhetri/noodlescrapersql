@@ -1,7 +1,7 @@
 import sqlite3
 import requests
-import json,csv,pandas as pd
-import sys,os
+import json,os
+import sys
 sys.path.append("..")
 
 
@@ -14,18 +14,26 @@ def scrape(searchitem):
         r = requests.get(darazurl).text
         jsonresponse = json.loads(r.split("window.pageData=")[1].split('</script>')[0])
         mainlist = jsonresponse['mods']['listItems']
-        nameprice = searchitem+ 'price.db'
-
-        connection = sqlite3.connect(f"{nameprice}")
-        print(3)
-        c =connection.cursor()
-        c.execute('''CREATE TABLE Productprice(Product name TEXT, Price INT)''')
-        for item in mainlist:
-            price = 'Rs.'+ str(int(float(item['utLogMap']['current_price'])))
-            c.execute('''INSERT INTO Productprice VALUES(?,?)''',(item['name'],price))
-        connection.commit()
+        return mainlist
     except:
         return "Bad Url"
+
+def middlewareprice(searchitem):
+    mainlist = scrape(searchitem)
+    if mainlist:
+        sqlproductprice(searchitem,mainlist)
+    else:
+        return "Bad url"
+
+def sqlproductprice(searchitem,mainlist):
+    nameprice = '../files/'+searchitem+ '.db'
+    connection = sqlite3.connect(nameprice)
+    c =connection.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS productprice(Product name TEXT, Price TEXT)''')
+    for item in mainlist:
+        price = 'Rs.'+ str(int(float(item['utLogMap']['current_price'])))
+        c.execute('''INSERT INTO Productprice VALUES(?,?)''',(item['name'],price))
+    connection.commit()
 
 def stopwordsremover(sentence):
     nostopword_sentence =list()
@@ -57,7 +65,6 @@ def ngramcreator(strings,n_grams):
             finallist.append(finalstring.lstrip())
         return finallist
 
-
 def quantitygen(item):
     quantitylist = ['Packs','packs','Pack of','pcs','Pieces','Pack','RamenPack']
     n_gram = ngramcreator(item,2)
@@ -83,33 +90,55 @@ def weightgen(item):
         else:
             weight= []
 
-def csvquantity(searchitem):
-    nameprice = searchitem+ 'price.csv'
-    namequantity = searchitem +'quantity.csv'
-    products = pd.read_csv(f'../files/{nameprice}')
-    product_name= list(products['Product name'])
-    product_price = list(products['Price'])
-    with open(f'../files/{namequantity}','w') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Name','Price','Quantity','Weight','Unit of Weight'])
-        for value in range(len(product_name)):
-            quantity = quantitygen(product_name[value])
-            if quantity==None:
-                quantity =1
-            weight = weightgen(product_name[value])
-            if weight == None:
-                writer.writerow([product_name[value],product_price[value],quantity,weight,None])
-                continue
-            writer.writerow([product_name[value],product_price[value],quantity,weight,'gm'])
+def csvpricesearcher(searchitem):
+    nameprice = '../files/'+searchitem+ '.db'
+    try:
+        connection = sqlite3.connect(nameprice)
+        c =connection.cursor()
+        c.execute('''SELECT * FROM productprice''')
+        product_item =c.fetchall()
+        return product_item
+    except:
+        return None
 
+def middlewarequantity(searchitem):
+    product = csvpricesearcher(searchitem)
+    if product!= None:
+        csvquantity(searchitem,product)
+    else:
+        return f"No table in the {searchitem}.db"
+
+def csvquantity(searchitem,product):
+    nameprice = '../files/'+searchitem+ '.db'
+    connection = sqlite3.connect(nameprice)
+    c =connection.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
+    for item in product:
+        quantity =quantitygen(item[0])
+        if quantity == None:
+            quantity =1
+        weight = weightgen(item[0])
+        if weight == None:
+            c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,None))
+            continue
+        c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,'gm'))
+        connection.commit()
+        # c.execute('''SELECT * FROM productquantity''')
+        # print(c.fetchall())
 
 def main(searchitem):
-    filepath = "../files/"+searchitem + 'price.csv'
-    if not (os.path.isfile(filepath)):
-        scrape(searchitem)
-        csvquantity(searchitem)
+    nameprice = '../files/'+searchitem+ '.db'
+    if (os.path.isfile(nameprice)):
+        connection = sqlite3.connect(nameprice)
+        c =connection.cursor()
+        table = c.execute('''SELECT productprice FROM sql_master WHERE type ='table';''').fetchall()
+        if not (table):
+            middlewareprice(searchitem)
+            middlewarequantity(searchitem)
+        else:
+            middlewarequantity(searchitem)
     else:
-        csvquantity(searchitem)
+        middlewareprice(searchitem)
+        middlewarequantity(searchitem)
 
-
-scrape("noodles")
+main('noodles')
