@@ -18,30 +18,26 @@ def scrape(searchitem):
         mainlist = jsonresponse['mods']['listItems']
         return mainlist
     except:
-        return "Bad Url"
+        return None
 
 
-def middlewareprice(searchitem):
+def scrape_and_insert_products(searchitem):
     mainlist = scrape(searchitem)
     if mainlist:
-        return mainlist
-    else:
-        return "Bad url"
+        product_price_into_db(searchitem,mainlist)
 
 
-def product_price_into_db(searchitem):
-    mainlist = middlewareprice(searchitem)
-    if not mainlist == 'Bad url':
-        nameprice = '../files/'+searchitem + '.db'
-        connection = sqlite3.connect(nameprice)
-        c = connection.cursor()
-        c.execute(
-            '''CREATE TABLE IF NOT EXISTS productprice(Product name TEXT, Price TEXT)''')
-        for item in mainlist:
-            price = 'Rs.' + str(int(float(item['utLogMap']['current_price'])))
-            c.execute('''INSERT INTO Productprice VALUES(?,?)''',
-                      (item['name'], price))
-        connection.commit()
+def product_price_into_db(searchitem,mainlist):
+    nameprice = '../files/'+searchitem + '.db'
+    connection = sqlite3.connect(nameprice)
+    c = connection.cursor()
+    c.execute(
+        '''CREATE TABLE IF NOT EXISTS productprice(Product name TEXT, Price TEXT)''')
+    for item in mainlist:
+        price = 'Rs.' + str(int(float(item['utLogMap']['current_price'])))
+        c.execute('''INSERT INTO Productprice VALUES(?,?)''',
+                    (item['name'], price))
+    connection.commit()
 
 
 def stopwordsremover(sentence):
@@ -117,25 +113,23 @@ def extract_productprice_from_db(searchitem):
         return None
 
 
-def middlewarequantity(searchitem):
+def extract_and_insert_product_quantity(searchitem):
     product_list = extract_productprice_from_db(searchitem)
     if product_list != None:
-        return product_list
+        return productquantity_into_db(searchitem,product_list)
 
 
-def productquantity_into_db(searchitem):
-    product_list = middlewarequantity(searchitem)
-    if not product_list == None:
-        nameprice = '../files/'+searchitem + '.db'
-        connection = sqlite3.connect(nameprice)
-        c = connection.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
-        for item in product_list:
-            quantity = quantity_generator(item[0])
-            weight = weight_generator(item[0])
-            c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''', (
-                item[0], item[1], 1 if quantity == None else quantity, weight, None if weight == None else 'gm'))
-            connection.commit()
+def productquantity_into_db(searchitem,product_list):
+    nameprice = '../files/'+searchitem + '.db'
+    connection = sqlite3.connect(nameprice)
+    c = connection.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
+    for item in product_list:
+        quantity = quantity_generator(item[0])
+        weight = weight_generator(item[0])
+        c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''', (
+            item[0], item[1], 1 if quantity == None else quantity, weight, None if weight == None else 'gm'))
+        connection.commit()
 
 
 def main(searchitem):
@@ -145,9 +139,9 @@ def main(searchitem):
     tablelist = c.execute(
         '''SELECT * FROM sqlite_master WHERE type ='table';''').fetchall()
     if not ('productprice' in tablelist):
-        product_price_into_db(searchitem)
-        productquantity_into_db(searchitem)
+        scrape_and_insert_products(searchitem)
+        extract_and_insert_product_quantity(searchitem)
     else:
-        productquantity_into_db(searchitem)
+        extract_and_insert_product_quantity(searchitem)
 
 # main('noodles')

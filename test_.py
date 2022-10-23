@@ -62,37 +62,44 @@ def test_scrape():
     assert len(scrape('sweet'))>0
   
     #Fail Case, no file is created because of a bad url
-    assert scrape("randomthingentered")== "Bad Url"
+    assert scrape("randomthingentered")== None
 
-def test_middlewareprice():
-    assert type(middlewareprice('noodles')) == list
-    assert len(middlewareprice('biscuits'))>0
-    assert middlewareprice('thisisbadurl')== "Bad Url"
+def test_scrape_and_insertproducts():
+    filedeleter('../files/noodles.db')
+    scrape_and_insert_products('noodles')
+    assert tablechecker('productprice','noodles') == True
+    assert scrape_and_insert_products('thisisbadurl')== None
 
 def test_productprice_into_db():
-    tabledeleter('productprice','sweet')
-    product_price_into_db('sweet')
-    assert tablechecker('productprice','sweet') == True
-
-def test_csvpricesearcher():
     filedeleter('../files/noodles.db')
-    product_price_into_db('noodles')
+    mainlist = scrape('noodles')
+    product_price_into_db('noodles',mainlist)
+    assert tablechecker('productprice','noodles') == True
+
+def test_extract_productprice_from_db():
+    filedeleter('../files/noodles.db')
+    mainlist = scrape('noodles')
+    product_price_into_db('noodles',mainlist)
     assert type(extract_productprice_from_db('noodles')) == list
     assert len(extract_productprice_from_db('noodles'))>0
     assert extract_productprice_from_db("thisisabadsearch") == None
 
-def test_middlewarequantity():
+def test_extract_and_insert_productquantity():
     filedeleter('../files/noodles.db')
-    product_price_into_db('noodles')
-    assert type(middlewarequantity('noodles')) == list
-    assert len(middlewarequantity('noodles'))>0
-    assert middlewarequantity("thisisabadsearch") == None
+    mainlist = scrape('noodles')
+    product_price_into_db('noodles',mainlist)
+
+    extract_and_insert_product_quantity('noodles')
+    assert tablechecker('productquantity','noodles') == True
 
 def test_productquantity_into_db():
     filedeleter('../files/noodles.db')
-    product_price_into_db('noodles')
+    mainlist = scrape('noodles')
+    product_price_into_db('noodles',mainlist)
+
     tabledeleter('productquantity','noodles')
-    productquantity_into_db("noodles")
+    product_list = extract_productprice_from_db('noodles')
+    productquantity_into_db("noodles",product_list)
     assert tablechecker('productquantity','noodles') == True
 
 def test_main():
@@ -108,10 +115,10 @@ if __name__ == "__main__":
     test_ngramcreator()
     test_weightgen()
     test_scrape()
-    test_middlewareprice()
+    test_scrape_and_insertproducts()
     test_productprice_into_db()
-    test_csvpricesearcher()
-    test_middlewarequantity()
+    test_extract_productprice_from_db()
+    test_extract_and_insert_productquantity()
     test_productquantity_into_db()
     test_main()
 
