@@ -75,18 +75,21 @@ def test_sqlproductprice():
     assert tablechecker('productprice','sweet') == True
 
 def test_csvpricesearcher():
+    filedeleter('../files/noodles.db')
     sqlproductprice('noodles')
     assert type(csvpricesearcher('noodles')) == list
     assert len(csvpricesearcher('noodles'))>0
     assert csvpricesearcher("thisisabadsearch") == None
 
 def test_middlewarequantity():
+    filedeleter('../files/noodles.db')
     sqlproductprice('noodles')
     assert type(middlewarequantity('noodles')) == list
     assert len(middlewarequantity('noodles'))>0
     assert middlewarequantity("thisisabadsearch") == None
 
 def test_csvquantity():
+    filedeleter('../files/noodles.db')
     sqlproductprice('noodles')
     tabledeleter('productquantity','noodles')
     csvquantity("noodles")
