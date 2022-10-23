@@ -29,7 +29,7 @@ def middlewareprice(searchitem):
         return "Bad url"
 
 
-def sqlproductprice(searchitem):
+def product_price_into_db(searchitem):
     mainlist = middlewareprice(searchitem)
     if not mainlist == 'Bad url':
         nameprice = '../files/'+searchitem + '.db'
@@ -77,7 +77,7 @@ def ngramcreator(strings, n_grams):
         return finallist
 
 
-def quantitygen(item):
+def quantity_generator(item):
     quantitylist = ['Packs', 'packs', 'Pack of',
                     'pcs', 'Pieces', 'Pack', 'RamenPack']
     n_gram = ngramcreator(item, 2)
@@ -90,7 +90,7 @@ def quantitygen(item):
                             return int(itee)
 
 
-def weightgen(item):
+def weight_generator(item):
     items = item.split()
     a = ''.join(items).lower()
     weight = []
@@ -105,7 +105,7 @@ def weightgen(item):
             weight = []
 
 
-def csvpricesearcher(searchitem):
+def extract_productprice_from_db(searchitem):
     nameprice = '../files/'+searchitem + '.db'
     try:
         connection = sqlite3.connect(nameprice)
@@ -118,12 +118,12 @@ def csvpricesearcher(searchitem):
 
 
 def middlewarequantity(searchitem):
-    product_list = csvpricesearcher(searchitem)
+    product_list = extract_productprice_from_db(searchitem)
     if product_list != None:
         return product_list
 
 
-def csvquantity(searchitem):
+def productquantity_into_db(searchitem):
     product_list = middlewarequantity(searchitem)
     if not product_list == None:
         nameprice = '../files/'+searchitem + '.db'
@@ -131,8 +131,8 @@ def csvquantity(searchitem):
         c = connection.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
         for item in product_list:
-            quantity = quantitygen(item[0])
-            weight = weightgen(item[0])
+            quantity = quantity_generator(item[0])
+            weight = weight_generator(item[0])
             c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''', (
                 item[0], item[1], 1 if quantity == None else quantity, weight, None if weight == None else 'gm'))
             connection.commit()
@@ -145,9 +145,9 @@ def main(searchitem):
     tablelist = c.execute(
         '''SELECT * FROM sqlite_master WHERE type ='table';''').fetchall()
     if not ('productprice' in tablelist):
-        sqlproductprice(searchitem)
-        csvquantity(searchitem)
+        product_price_into_db(searchitem)
+        productquantity_into_db(searchitem)
     else:
-        csvquantity(searchitem)
+        productquantity_into_db(searchitem)
 
 # main('noodles')
