@@ -1,6 +1,6 @@
 import sqlite3
 import requests
-import json,os
+import json
 import sys
 sys.path.append("..")
 
