@@ -21,11 +21,12 @@ def scrape(searchitem):
 def middlewareprice(searchitem):
     mainlist = scrape(searchitem)
     if mainlist:
-        sqlproductprice(searchitem,mainlist)
+        return mainlist
     else:
         return "Bad url"
 
-def sqlproductprice(searchitem,mainlist):
+def sqlproductprice(searchitem):
+    mainlist = middlewareprice(searchitem)
     nameprice = '../files/'+searchitem+ '.db'
     connection = sqlite3.connect(nameprice)
     c =connection.cursor()
@@ -96,49 +97,43 @@ def csvpricesearcher(searchitem):
         connection = sqlite3.connect(nameprice)
         c =connection.cursor()
         c.execute('''SELECT * FROM productprice''')
-        product_item =c.fetchall()
-        return product_item
+        product_list =c.fetchall()
+        return product_list
     except:
         return None
 
 def middlewarequantity(searchitem):
-    product = csvpricesearcher(searchitem)
-    if product!= None:
-        csvquantity(searchitem,product)
-    else:
-        return f"No table in the {searchitem}.db"
+    product_list = csvpricesearcher(searchitem)
+    if product_list!= None:
+        return product_list
 
-def csvquantity(searchitem,product):
-    nameprice = '../files/'+searchitem+ '.db'
-    connection = sqlite3.connect(nameprice)
-    c =connection.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
-    for item in product:
-        quantity =quantitygen(item[0])
-        if quantity == None:
-            quantity =1
-        weight = weightgen(item[0])
-        if weight == None:
-            c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,None))
-            continue
-        c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,'gm'))
-        connection.commit()
-        # c.execute('''SELECT * FROM productquantity''')
-        # print(c.fetchall())
+def csvquantity(searchitem):
+    product_list = middlewarequantity(searchitem)
+    if not product_list== None:
+        nameprice = '../files/'+searchitem+ '.db'
+        connection = sqlite3.connect(nameprice)
+        c =connection.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
+        for item in product_list:
+            quantity =quantitygen(item[0])
+            if quantity == None:
+                quantity =1
+            weight = weightgen(item[0])
+            if weight == None:
+                c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,None))
+                continue
+            c.execute('''INSERT INTO productquantity VALUES(?,?,?,?,?)''',(item[0],item[1],quantity,weight,'gm'))
+            connection.commit()
 
 def main(searchitem):
     nameprice = '../files/'+searchitem+ '.db'
-    if (os.path.isfile(nameprice)):
-        connection = sqlite3.connect(nameprice)
-        c =connection.cursor()
-        table = c.execute('''SELECT productprice FROM sql_master WHERE type ='table';''').fetchall()
-        if not (table):
-            middlewareprice(searchitem)
-            middlewarequantity(searchitem)
-        else:
-            middlewarequantity(searchitem)
+    connection = sqlite3.connect(nameprice)
+    c =connection.cursor()
+    tablelist = c.execute('''SELECT * FROM sqlite_master WHERE type ='table';''').fetchall()
+    if not ('productprice' in tablelist):
+        sqlproductprice(searchitem)
+        csvquantity(searchitem)
     else:
-        middlewareprice(searchitem)
-        middlewarequantity(searchitem)
+        csvquantity(searchitem)
 
-main('noodles')
+# main('noodles')
