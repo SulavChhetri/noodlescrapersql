@@ -1,6 +1,5 @@
 from quantitycreator.total import *
 import os
-from files import file_path
 
 def filedeleter(file_path):
     if os.path.isfile(file_path):

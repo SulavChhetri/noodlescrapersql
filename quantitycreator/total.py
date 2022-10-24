@@ -1,8 +1,9 @@
 import sqlite3
 import requests
 import json,os
-
-from noodlescrapersql.files import file_path
+from pathlib import Path
+ROOT_DIR = Path(__file__).parent.parent
+file_path = os.path.join(ROOT_DIR,'files')
 
 with open(os.path.join(file_path,'stopwords.txt'), 'r')as file:
     lines = [line.rstrip('\n') for line in file]
@@ -141,3 +142,6 @@ def main(searchitem):
         extract_and_insert_product_quantity(searchitem)
     else:
         extract_and_insert_product_quantity(searchitem)
+
+
+# main('noodles')
