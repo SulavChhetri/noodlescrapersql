@@ -2,7 +2,7 @@ import sqlite3
 import requests
 import json,os
 
-from files import file_path
+from noodlescrapersql.files import file_path
 
 with open(os.path.join(file_path,'stopwords.txt'), 'r')as file:
     lines = [line.rstrip('\n') for line in file]

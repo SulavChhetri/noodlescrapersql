@@ -1,8 +1,8 @@
-from total import *
+from quantitycreator.total import *
 import os
 from files import file_path
 
-def filedeleter(file_path): # return True if the file is deleted, else return False
+def filedeleter(file_path):
     if os.path.isfile(file_path):
         os.remove(file_path)
         return True
