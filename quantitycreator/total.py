@@ -1,12 +1,14 @@
 import sqlite3
 import requests
-import json,os
+import json
+import os
 from pathlib import Path
 ROOT_DIR = Path(__file__).parent.parent
-file_path = os.path.join(ROOT_DIR,'files')
+file_path = os.path.join(ROOT_DIR, 'files')
 
-with open(os.path.join(file_path,'stopwords.txt'), 'r')as file:
+with open(os.path.join(file_path, 'stopwords.txt'), 'r')as file:
     lines = [line.rstrip('\n') for line in file]
+
 
 def scrape(searchitem):
     try:
@@ -23,10 +25,10 @@ def scrape(searchitem):
 def scrape_and_insert_products(searchitem):
     mainlist = scrape(searchitem)
     if mainlist:
-        product_price_into_db(searchitem,mainlist)
+        product_price_into_db(searchitem, mainlist)
 
 
-def product_price_into_db(searchitem,mainlist):
+def product_price_into_db(searchitem, mainlist):
     nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c = connection.cursor()
@@ -35,7 +37,7 @@ def product_price_into_db(searchitem,mainlist):
     for item in mainlist:
         price = 'Rs.' + str(int(float(item['utLogMap']['current_price'])))
         c.execute('''INSERT INTO Productprice VALUES(?,?)''',
-                    (item['name'], price))
+                  (item['name'], price))
     connection.commit()
 
 
@@ -115,10 +117,10 @@ def extract_productprice_from_db(searchitem):
 def extract_and_insert_product_quantity(searchitem):
     product_list = extract_productprice_from_db(searchitem)
     if product_list != None:
-        return productquantity_into_db(searchitem,product_list)
+        return productquantity_into_db(searchitem, product_list)
 
 
-def productquantity_into_db(searchitem,product_list):
+def productquantity_into_db(searchitem, product_list):
     nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c = connection.cursor()
