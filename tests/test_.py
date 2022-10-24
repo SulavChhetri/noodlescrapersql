@@ -10,9 +10,9 @@ def filedeleter(file_path):
 
 def tabledeleter(tablename,searchitem):
     nameprice = file_path+'/'+searchitem + '.db'
-    connection = sqlite3.connect(nameprice)
-    c =connection.cursor()
-    c.execute(f"DROP TABLE IF EXISTS {tablename}")
+    with sqlite3.connect(nameprice) as conn:
+        c = conn.cursor()
+        c.execute(f"DROP TABLE IF EXISTS {tablename}")
 
 def test_tablechecker():
     filedeleter(file_path+'/noodles.db')
