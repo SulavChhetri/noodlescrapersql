@@ -132,18 +132,22 @@ def productquantity_into_db(searchitem, product_list):
             item[0], item[1], 1 if quantity == None else quantity, weight, None if weight == None else 'gm'))
         connection.commit()
 
-
-def main(searchitem):
+def tablechecker(tablename,searchitem):
     nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
-    c = connection.cursor()
-    tablelist = c.execute(
-        '''SELECT * FROM sqlite_master WHERE type ='table';''').fetchall()
-    if not ('productprice' in tablelist):
+    c =connection.cursor()
+    tablelist = c.execute(f"SELECT * FROM sqlite_master WHERE type ='table'").fetchall()
+    for item in tablelist:
+        if tablename in item:
+            return True
+    return False
+
+def main(searchitem):
+    if not (tablechecker('productprice',searchitem)):
         scrape_and_insert_products(searchitem)
         extract_and_insert_product_quantity(searchitem)
     else:
         extract_and_insert_product_quantity(searchitem)
 
 
-# main('noodles')
+main('noodles')

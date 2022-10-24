@@ -14,14 +14,18 @@ def tabledeleter(tablename,searchitem):
     c =connection.cursor()
     c.execute(f"DROP TABLE IF EXISTS {tablename}")
 
-def tablechecker(tablename,searchitem):
-    nameprice = file_path+'/'+searchitem + '.db'
-    connection = sqlite3.connect(nameprice)
-    c =connection.cursor()
-    tablelist = c.execute(f"SELECT * FROM sqlite_master WHERE type ='table'").fetchall()
-    for item in tablelist:
-        if tablename in item:
-            return True
+def test_tablechecker():
+    filedeleter(file_path+'/noodles.db')
+    scrape_and_insert_products('noodles')
+    assert tablechecker('productprice','noodles')==True
+    assert tablechecker('productquantity','noodles') == False
+
+    filedeleter(file_path+'/noodles.db')
+    main('noodles')
+    assert tablechecker('productprice','noodles')==True
+    assert tablechecker('productquantity','noodles') == True
+
+
 
 def test_quantity_generator():
     # Pass case
@@ -120,5 +124,6 @@ if __name__ == "__main__":
     test_extract_productprice_from_db()
     test_extract_and_insert_productquantity()
     test_productquantity_into_db()
+    test_tablechecker()
     test_main()
 
