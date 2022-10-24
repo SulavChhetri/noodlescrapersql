@@ -1,13 +1,11 @@
 import sqlite3
 import requests
-import json
-import sys
-sys.path.append("..")
+import json,os
 
+from files import file_path
 
-with open('../files/stopwords.txt', 'r')as file:
+with open(os.path.join(file_path,'stopwords.txt'), 'r')as file:
     lines = [line.rstrip('\n') for line in file]
-
 
 def scrape(searchitem):
     try:
@@ -28,7 +26,7 @@ def scrape_and_insert_products(searchitem):
 
 
 def product_price_into_db(searchitem,mainlist):
-    nameprice = '../files/'+searchitem + '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c = connection.cursor()
     c.execute(
@@ -102,7 +100,7 @@ def weight_generator(item):
 
 
 def extract_productprice_from_db(searchitem):
-    nameprice = '../files/'+searchitem + '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     try:
         connection = sqlite3.connect(nameprice)
         c = connection.cursor()
@@ -120,7 +118,7 @@ def extract_and_insert_product_quantity(searchitem):
 
 
 def productquantity_into_db(searchitem,product_list):
-    nameprice = '../files/'+searchitem + '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c = connection.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS productquantity(Product name TEXT, Price TEXT,Quantity INT, Weight INT, Unit of Weight TEXT)''')
@@ -133,7 +131,7 @@ def productquantity_into_db(searchitem,product_list):
 
 
 def main(searchitem):
-    nameprice = '../files/'+searchitem + '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c = connection.cursor()
     tablelist = c.execute(
@@ -143,5 +141,3 @@ def main(searchitem):
         extract_and_insert_product_quantity(searchitem)
     else:
         extract_and_insert_product_quantity(searchitem)
-
-# main('noodles')

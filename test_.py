@@ -1,5 +1,6 @@
-from quantitytester.total import *
+from total import *
 import os
+from files import file_path
 
 def filedeleter(file_path): # return True if the file is deleted, else return False
     if os.path.isfile(file_path):
@@ -9,13 +10,13 @@ def filedeleter(file_path): # return True if the file is deleted, else return Fa
         return False
 
 def tabledeleter(tablename,searchitem):
-    nameprice = '../files/'+searchitem+ '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c =connection.cursor()
     c.execute(f"DROP TABLE IF EXISTS {tablename}")
 
 def tablechecker(tablename,searchitem):
-    nameprice = '../files/'+searchitem+ '.db'
+    nameprice = file_path+'/'+searchitem + '.db'
     connection = sqlite3.connect(nameprice)
     c =connection.cursor()
     tablelist = c.execute(f"SELECT * FROM sqlite_master WHERE type ='table'").fetchall()
@@ -65,19 +66,19 @@ def test_scrape():
     assert scrape("randomthingentered")== None
 
 def test_scrape_and_insertproducts():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     scrape_and_insert_products('noodles')
     assert tablechecker('productprice','noodles') == True
     assert scrape_and_insert_products('thisisbadurl')== None
 
 def test_productprice_into_db():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     mainlist = scrape('noodles')
     product_price_into_db('noodles',mainlist)
     assert tablechecker('productprice','noodles') == True
 
 def test_extract_productprice_from_db():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     mainlist = scrape('noodles')
     product_price_into_db('noodles',mainlist)
     assert type(extract_productprice_from_db('noodles')) == list
@@ -85,7 +86,7 @@ def test_extract_productprice_from_db():
     assert extract_productprice_from_db("thisisabadsearch") == None
 
 def test_extract_and_insert_productquantity():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     mainlist = scrape('noodles')
     product_price_into_db('noodles',mainlist)
 
@@ -93,7 +94,7 @@ def test_extract_and_insert_productquantity():
     assert tablechecker('productquantity','noodles') == True
 
 def test_productquantity_into_db():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     mainlist = scrape('noodles')
     product_price_into_db('noodles',mainlist)
 
@@ -103,7 +104,7 @@ def test_productquantity_into_db():
     assert tablechecker('productquantity','noodles') == True
 
 def test_main():
-    filedeleter('../files/noodles.db')
+    filedeleter(file_path+'/noodles.db')
     main('noodles')
     assert tablechecker('productquantity','noodles') == True
     assert tablechecker('productprice','noodles') == True
